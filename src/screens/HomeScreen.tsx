@@ -2,15 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StackScreenProps } from "@react-navigation/stack";
 import { useEffect, useState } from "react";
 import { Button, FlatList, Text, TouchableOpacity, View } from "react-native";
-type Note = {
-    title: string;
-    content: string;
-}
-type RootStackParamList = {
-    Home: undefined;
-    Note: { note?: Note };
-}
-type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
+import { Note, HomeScreenProps } from "../utils/types";
 export default function HomeScreen({ navigation }: HomeScreenProps) {
     const [notes, setNotes] = useState<Array<Note>>([]);
     useEffect(() => {
