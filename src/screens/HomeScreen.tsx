@@ -18,7 +18,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     }
     return (
         <View style={{flex: 1, padding: 20}}> 
-            <Button title="Add Note" onPress={() => navigation.navigate('Note')} />
+            <Button title="Add Note" onPress={() => navigation.navigate('Note', { note: undefined })} />
             <FlatList data={notes} keyExtractor={(item, index) => index.toString()} renderItem={({ item }) => (
                 <TouchableOpacity onPress={() => navigation.navigate('Note', { note: item })}>
                     <Text style={{padding: 10, fontSize: 18}}>{item.title}</Text>
