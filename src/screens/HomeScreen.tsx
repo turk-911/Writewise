@@ -17,11 +17,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         }
     }
     return (
-        <View>
+        <View style={{flex: 1, padding: 20}}> 
             <Button title="Add Note" onPress={() => navigation.navigate('Note')} />
             <FlatList data={notes} keyExtractor={(item, index) => index.toString()} renderItem={({ item }) => (
                 <TouchableOpacity onPress={() => navigation.navigate('Note', { note: item })}>
-                    <Text>{item.title}</Text>
+                    <Text style={{padding: 10, fontSize: 18}}>{item.title}</Text>
                 </TouchableOpacity>
             )} />
         </View>
