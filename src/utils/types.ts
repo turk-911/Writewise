@@ -1,8 +1,9 @@
 import { StackScreenProps } from "@react-navigation/stack";
-
 export type Note = {
     title: string;
     content: string;
+    coverImage: string;
+    emoji: string;
 };
 export type RootStackParamList = {
     Home: undefined;
