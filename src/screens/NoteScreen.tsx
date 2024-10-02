@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { Alert, Button, StyleSheet, TextInput, View } from "react-native";
+import { Alert, Button, Keyboard, StyleSheet, TextInput, TouchableWithoutFeedback, View } from "react-native";
 import { Note, NoteScreenProps } from "../utils/types";
-import { Appearance } from "react-native-appearance";
+import { Appearance } from "react-native";
 import { darkTheme, lightTheme } from "../utils/theme";
 export default function NoteScreen({ route, navigation }: NoteScreenProps) {
   const { note } = route.params;
@@ -43,36 +43,42 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
     }
   };
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.backgroundColor }]}
-    >
-      <TextInput
-        value={title}
-        onChangeText={setTitle}
-        placeholder="Title"
-        style={[
-          styles.input,
-          {
-            backgroundColor: theme.backgroundColor,
-            color: theme.inputTextColor,
-          },
-        ]}
-      />
-      <TextInput
-        value={content}
-        onChangeText={setContent}
-        placeholder="Content"
-        multiline
-        style={[
-          styles.textArea,
-          {
-            backgroundColor: theme.backgroundColor,
-            color: theme.inputTextColor,
-          },
-        ]}
-      />
-      <Button title="Save Note" onPress={saveNote} color={theme.buttonColor} />
-    </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View
+        style={[styles.container, { backgroundColor: theme.backgroundColor }]}
+      >
+        <TextInput
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Title"
+          style={[
+            styles.input,
+            {
+              backgroundColor: theme.backgroundColor,
+              color: theme.inputTextColor,
+            },
+          ]}
+        />
+        <TextInput
+          value={content}
+          onChangeText={setContent}
+          placeholder="Content"
+          multiline
+          style={[
+            styles.textArea,
+            {
+              backgroundColor: theme.backgroundColor,
+              color: theme.inputTextColor,
+            },
+          ]}
+        />
+        <Button
+          title="Save Note"
+          onPress={saveNote}
+          color={theme.buttonColor}
+        />
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 const styles = StyleSheet.create({

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Note, HomeScreenProps } from "../utils/types";
 import { useIsFocused } from "@react-navigation/native";
-import { Appearance } from "react-native-appearance";
+import { Appearance } from "react-native";
 import { darkTheme, lightTheme } from "../utils/theme";
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [notes, setNotes] = useState<Array<Note>>([]);
