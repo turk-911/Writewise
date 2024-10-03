@@ -1,4 +1,5 @@
 import { StackScreenProps } from "@react-navigation/stack";
+import { ReactNode } from "react";
 export type Note = {
     title: string;
     content: string;
@@ -11,3 +12,8 @@ export type RootStackParamList = {
 };
 export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 export type NoteScreenProps = StackScreenProps<RootStackParamList, 'Note'>;
+export interface EmojiPickerProps {
+    isVisible: boolean;
+    children: ReactNode;
+    onClose: () => void;
+};
