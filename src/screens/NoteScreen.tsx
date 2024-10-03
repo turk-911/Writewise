@@ -1,11 +1,22 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { Alert, Button, Image, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import {
+  Alert,
+  Button,
+  Image,
+  Keyboard,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { Note, NoteScreenProps } from "../utils/types";
 import { Appearance } from "react-native";
 import { darkTheme, lightTheme } from "../utils/theme";
 import * as ImagePicker from "expo-image-picker";
-import EmojiSelector from "react-native-emoji-selector";
 import EmojiPicker from "../modals/EmojiPicker";
 export default function NoteScreen({ route, navigation }: NoteScreenProps) {
   const { note } = route.params;
@@ -18,15 +29,39 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
       : "https://unsplash.com/photos/3d-geometric-texture-in-copper-jz4D4prCXSM"
   );
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+  const promptImageSelection = () => {
+    Alert.alert(
+      "Select image",
+      "Choose an option to select your cover image",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Camera", onPress: takePhoto },
+        { text: "Gallery", onPress: selectImage },
+      ]
+    )
+  }
   const selectImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
       quality: 1,
     });
+    if (!result.canceled) setCoverImage(result.assets[0].uri);
+    else
+      setCoverImage(
+        "https://unsplash.com/photos/3d-geometric-texture-in-copper-jz4D4prCXSM"
+      );
+  };
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if(status !== 'granted') {
+      Alert.alert("Error", "Camera permissions are required");
+      return;
+    }
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 1,
+    });
     if(!result.canceled) setCoverImage(result.assets[0].uri);
-    else setCoverImage(
-      "https://unsplash.com/photos/3d-geometric-texture-in-copper-jz4D4prCXSM"
-    );
   }
   const [theme, setTheme] = useState(
     Appearance.getColorScheme() === "dark" ? darkTheme : lightTheme
@@ -40,7 +75,7 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
   const selectEmoji = (selectedEmoji: string) => {
     setEmoji(selectedEmoji);
     setShowEmojiPicker(false);
-  }
+  };
   const saveNote = async () => {
     if (title.trim() === "" || content.trim() === "") {
       Alert.alert("Error", "Both title and content are required");
@@ -67,76 +102,69 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
     }
   };
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View
-        style={[styles.container, { backgroundColor: theme.backgroundColor }]}
-      >
-        {coverImage && (
-          <Image source={{ uri: coverImage }} style={styles.coverImage} />
-        )}
-        <TouchableOpacity onPress={selectImage}>
-          <Text style={styles.addImageText}>Add Cover Image</Text>
-        </TouchableOpacity>
-        <View style={styles.emojiContainer}>
-          <TouchableOpacity onPress={() => setShowEmojiPicker(true)}>
-            <Text style={styles.emoji}>{emoji || "😊"}</Text>
-          </TouchableOpacity>
-        </View>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Title"
-          style={[
-            styles.input,
-            {
-              backgroundColor: theme.backgroundColor,
-              color: theme.inputTextColor,
-            },
-          ]}
-        />
-        <TextInput
-          value={content}
-          onChangeText={setContent}
-          placeholder="Content"
-          multiline
-          style={[
-            styles.textArea,
-            {
-              backgroundColor: theme.backgroundColor,
-              color: theme.inputTextColor,
-            },
-          ]}
-        />
-        <Button
-          title="Save Note"
-          onPress={saveNote}
-          color={theme.buttonColor}
-        />
-        <EmojiPicker
-          isVisible={showEmojiPicker}
-          onClose={() => setShowEmojiPicker(false)}
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View
+          style={[styles.container, { backgroundColor: theme.backgroundColor }]}
         >
-          <Text
-            style={styles.emojiOption}
-            onPress={() => setEmoji("😊")}
+          {coverImage && (
+            <Image source={{ uri: coverImage }} style={styles.coverImage} />
+          )}
+          <TouchableOpacity onPress={promptImageSelection}>
+            <Text style={styles.addImageText}>Add Cover Image</Text>
+          </TouchableOpacity>
+          <View style={styles.emojiContainer}>
+            <TouchableOpacity onPress={() => setShowEmojiPicker(true)}>
+              <Text style={styles.emoji}>{emoji || "😊"}</Text>
+            </TouchableOpacity>
+          </View>
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Title"
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.backgroundColor,
+                color: theme.inputTextColor,
+              },
+            ]}
+          />
+          <TextInput
+            value={content}
+            onChangeText={setContent}
+            placeholder="Content"
+            multiline
+            style={[
+              styles.textArea,
+              {
+                backgroundColor: theme.backgroundColor,
+                color: theme.inputTextColor,
+              },
+            ]}
+          />
+          <Button
+            title="Save Note"
+            onPress={saveNote}
+            color={theme.buttonColor}
+          />
+          <EmojiPicker
+            isVisible={showEmojiPicker}
+            onClose={() => setShowEmojiPicker(false)}
           >
-            😊
-          </Text>
-          <Text
-            style={styles.emojiOption}
-            onPress={() => setEmoji("😂")}
-          >
-            😂
-          </Text>
-          <Text
-            style={styles.emojiOption}
-            onPress={() => setEmoji("❤️")}
-          >
-            ❤️
-          </Text>
-        </EmojiPicker>
-      </View>
-    </TouchableWithoutFeedback>
+            <Text style={styles.emojiOption} onPress={() => setEmoji("😊")}>
+              😊
+            </Text>
+            <Text style={styles.emojiOption} onPress={() => setEmoji("😂")}>
+              😂
+            </Text>
+            <Text style={styles.emojiOption} onPress={() => setEmoji("❤️")}>
+              ❤️
+            </Text>
+          </EmojiPicker>
+        </View>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({
