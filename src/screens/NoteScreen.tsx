@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Alert,
   Button,
@@ -18,28 +18,25 @@ import { Appearance } from "react-native";
 import { darkTheme, lightTheme } from "../utils/theme";
 import * as ImagePicker from "expo-image-picker";
 import EmojiPicker from "../modals/EmojiPicker";
+import { Audio } from "expo-av";
 export default function NoteScreen({ route, navigation }: NoteScreenProps) {
   const { note } = route.params;
   const [title, setTitle] = useState(note ? note.title : "");
   const [content, setContent] = useState(note ? note.content : "");
   const [emoji, setEmoji] = useState(note ? note.emoji : "😊");
   const [coverImage, setCoverImage] = useState<string | null>(
-    note
-      ? note.coverImage
-      : "https://unsplash.com/photos/3d-geometric-texture-in-copper-jz4D4prCXSM"
+    note?.coverImage || "https://unsplash.com/photos/3d-geometric-texture-in-copper-jz4D4prCXSM"
   );
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+
+  // Code for selecting cover image
   const promptImageSelection = () => {
-    Alert.alert(
-      "Select image",
-      "Choose an option to select your cover image",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Camera", onPress: takePhoto },
-        { text: "Gallery", onPress: selectImage },
-      ]
-    )
-  }
+    Alert.alert("Select image", "Choose an option to select your cover image", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Camera", onPress: takePhoto },
+      { text: "Gallery", onPress: selectImage },
+    ]);
+  };
   const selectImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
@@ -53,7 +50,7 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
   };
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if(status !== 'granted') {
+    if (status !== "granted") {
       Alert.alert("Error", "Camera permissions are required");
       return;
     }
@@ -61,8 +58,10 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
       allowsEditing: true,
       quality: 1,
     });
-    if(!result.canceled) setCoverImage(result.assets[0].uri);
-  }
+    if (!result.canceled) setCoverImage(result.assets[0].uri);
+  };
+
+  // Code for figuring out which mode to select
   const [theme, setTheme] = useState(
     Appearance.getColorScheme() === "dark" ? darkTheme : lightTheme
   );
@@ -72,10 +71,14 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
     });
     return () => listener.remove();
   }, []);
+
+  // Code for selecting emoji
   const selectEmoji = (selectedEmoji: string) => {
     setEmoji(selectedEmoji);
     setShowEmojiPicker(false);
   };
+
+  // Code for saving note
   const saveNote = async () => {
     if (title.trim() === "" || content.trim() === "") {
       Alert.alert("Error", "Both title and content are required");
@@ -99,6 +102,62 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
       navigation.navigate("Home");
     } catch (error) {
       Alert.alert("Error", "Failed to save note");
+    }
+  };
+
+  // Code for microphone and voice note features
+  const [voiceNote, setVoiceNote] = useState<string | null>(note ? note?.voiceNote : null);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const startRecording = async () => {
+    try {
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Error", "Microphone permissions are required");
+        return;
+      }
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true });
+      const { recording } = await Audio.Recording.createAsync({
+        android: {
+          extension: ".m4a",
+          outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_DEFAULT, 
+          audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC,
+          sampleRate: 44100,
+          numberOfChannels: 2,
+          bitRate: 128000,
+        },
+        ios: {
+          extension: ".m4a",
+          audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_HIGH,
+          sampleRate: 44100,
+          numberOfChannels: 2,
+          bitRate: 128000,
+          linearPCMBitDepth: 16,
+          linearPCMIsBigEndian: false,
+          linearPCMIsFloat: false,
+        },
+        web: {
+          mimeType: "audio/webm", 
+          bitsPerSecond: 128000,
+        },
+        isMeteringEnabled: true,
+      });
+      setRecording(recording);
+    } catch (error) {
+      Alert.alert("Error", "Failed to start recording");
+    }
+  };
+  const stopRecording = async () => {
+    if (recording) {
+      setRecording(null);
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      setVoiceNote(uri);
+    }
+  };
+  const playVoiceNote = async () => {
+    if (voiceNote) {
+      const { sound } = await Audio.Sound.createAsync({ uri: voiceNote });
+      await sound.playAsync();
     }
   };
   return (
@@ -143,6 +202,16 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
               },
             ]}
           />
+          <View style={styles.audioControls}>
+            <Button
+              title={recording ? "Stop Recording" : "Start Recording"}
+              onPress={recording ? stopRecording : startRecording}
+              color={theme.buttonColor}
+            />
+            {voiceNote && (
+              <Button title="Play Voice Note" onPress={playVoiceNote} />
+            )}
+          </View>
           <Button
             title="Save Note"
             onPress={saveNote}
@@ -208,5 +277,9 @@ const styles = StyleSheet.create({
   emojiOption: {
     fontSize: 40,
     padding: 10,
+  },
+  audioControls: {
+    marginBottom: 20,
+    alignItems: "center",
   },
 });

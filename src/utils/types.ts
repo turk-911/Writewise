@@ -5,6 +5,7 @@ export type Note = {
     content: string;
     coverImage: string;
     emoji: string;
+    voiceNote: string;
 };
 export type RootStackParamList = {
     Home: undefined;
@@ -17,3 +18,8 @@ export interface EmojiPickerProps {
     children: ReactNode;
     onClose: () => void;
 };
+export interface MenuProps {
+    setLineColor: (color: string) => void;
+    setLineWidth: (width: number) => void;
+    setLineOpacity: (opacity: number) => void;
+}
