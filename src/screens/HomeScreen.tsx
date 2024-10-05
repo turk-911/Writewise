@@ -94,7 +94,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       </View>
       <Pressable
         style={styles.addButton}
-        onPress={() => navigation.navigate("Note", { note: undefined })}
+        onPress={() => {
+          const newNote = {
+            title: "",
+            content: "",
+            noteId: Math.random().toString(36).substr(2, 9), 
+            coverImage: null, 
+            emoji: "📝", 
+            voiceNote: null, 
+          };
+          navigation.navigate("Note", { note: newNote });
+        }}
       >
         <Text style={styles.addButtonText}>+</Text>
       </Pressable>

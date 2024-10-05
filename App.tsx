@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import HomeScreen from './src/screens/HomeScreen';
 import NoteScreen from './src/screens/NoteScreen';
 import { RootStackParamList } from './src/utils/types';
+import TextEditor from './src/components/TextEditor';
 const Stack = createStackNavigator<RootStackParamList>();
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+    // <TextEditor />
   );
 }
 

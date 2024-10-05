@@ -3,9 +3,10 @@ import { ReactNode } from "react";
 export type Note = {
     title: string;
     content: string;
-    coverImage: string;
+    noteId: string;
+    coverImage?: string | null; 
     emoji: string;
-    voiceNote: string;
+    voiceNote?: string | null; 
 };
 export type RootStackParamList = {
     Home: undefined;
@@ -22,4 +23,10 @@ export interface MenuProps {
     setLineColor: (color: string) => void;
     setLineWidth: (width: number) => void;
     setLineOpacity: (opacity: number) => void;
+}
+export interface TextEditorProps {
+    noteId: string;
+    onContentChange: (html: string) => void;
+    placeholder: string;
+    theme: any;
 }

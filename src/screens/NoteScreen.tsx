@@ -19,6 +19,7 @@ import { darkTheme, lightTheme } from "../utils/theme";
 import * as ImagePicker from "expo-image-picker";
 import EmojiPicker from "../modals/EmojiPicker";
 import { Audio } from "expo-av";
+import TextEditor from "../components/TextEditor";
 export default function NoteScreen({ route, navigation }: NoteScreenProps) {
   const { note } = route.params;
   const [title, setTitle] = useState(note ? note.title : "");
@@ -28,6 +29,7 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
     note?.coverImage || "https://unsplash.com/photos/3d-geometric-texture-in-copper-jz4D4prCXSM"
   );
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+  const { noteId } = route.params;
 
   // Code for selecting cover image
   const promptImageSelection = () => {
@@ -189,19 +191,13 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
               },
             ]}
           />
-          <TextInput
-            value={content}
-            onChangeText={setContent}
-            placeholder="Content"
-            multiline
-            style={[
-              styles.textArea,
-              {
-                backgroundColor: theme.backgroundColor,
-                color: theme.inputTextColor,
-              },
-            ]}
-          />
+          <View style={styles.textArea}>
+            <TextEditor
+              noteId={noteId}
+              placeholder="Write your content here..."
+              theme={theme}
+            />
+          </View>
           <View style={styles.audioControls}>
             <Button
               title={recording ? "Stop Recording" : "Start Recording"}
