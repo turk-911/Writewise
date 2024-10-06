@@ -26,10 +26,12 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
   const [content, setContent] = useState(note ? note.content : "");
   const [emoji, setEmoji] = useState(note ? note.emoji : "😊");
   const [coverImage, setCoverImage] = useState<string | null>(
-    note?.coverImage || "https://unsplash.com/photos/3d-geometric-texture-in-copper-jz4D4prCXSM"
+    note?.coverImage ||
+      "https://unsplash.com/photos/3d-geometric-texture-in-copper-jz4D4prCXSM"
   );
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
   const { noteId } = route.params;
+  const [password, setPassword] = useState<string>("");
 
   // Code for selecting cover image
   const promptImageSelection = () => {
@@ -89,13 +91,30 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
     try {
       const storedNotes = await AsyncStorage.getItem("notes");
       const notes: Array<Note> = storedNotes ? JSON.parse(storedNotes) : [];
+
       if (note) {
         const updatedNotes = notes.map((n) =>
-          n.title === note.title ? { title, content, emoji, coverImage } : n
+          n.title === note.title
+            ? {
+                title,
+                content,
+                emoji,
+                coverImage,
+                locked: note.locked,
+                password,
+              }
+            : n
         );
         await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
       } else {
-        const newNote = { title, content, emoji, coverImage };
+        const newNote = {
+          title,
+          content,
+          emoji,
+          coverImage,
+          locked: false,
+          password,
+        };
         await AsyncStorage.setItem(
           "notes",
           JSON.stringify([...notes, newNote])
@@ -108,7 +127,9 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
   };
 
   // Code for microphone and voice note features
-  const [voiceNote, setVoiceNote] = useState<string | null>(note ? note?.voiceNote : null);
+  const [voiceNote, setVoiceNote] = useState<string | null>(
+    note ? note?.voiceNote : null
+  );
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const startRecording = async () => {
     try {
@@ -121,7 +142,7 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
       const { recording } = await Audio.Recording.createAsync({
         android: {
           extension: ".m4a",
-          outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_DEFAULT, 
+          outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_DEFAULT,
           audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC,
           sampleRate: 44100,
           numberOfChannels: 2,
@@ -138,7 +159,7 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
           linearPCMIsFloat: false,
         },
         web: {
-          mimeType: "audio/webm", 
+          mimeType: "audio/webm",
           bitsPerSecond: 128000,
         },
         isMeteringEnabled: true,
@@ -183,6 +204,19 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
             value={title}
             onChangeText={setTitle}
             placeholder="Title"
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.backgroundColor,
+                color: theme.inputTextColor,
+              },
+            ]}
+          />
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password (leave blank if not locked)"
+            secureTextEntry={true}
             style={[
               styles.input,
               {

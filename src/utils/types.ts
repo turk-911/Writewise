@@ -1,4 +1,5 @@
-import { StackScreenProps } from "@react-navigation/stack";
+import { RouteProp } from "@react-navigation/native";
+import { StackNavigationProp, StackScreenProps } from "@react-navigation/stack";
 import { ReactNode } from "react";
 export type Note = {
     title: string;
@@ -7,13 +8,18 @@ export type Note = {
     coverImage?: string | null; 
     emoji: string;
     voiceNote?: string | null; 
+    locked: boolean;
+    password?: string;
 };
 export type RootStackParamList = {
     Home: undefined;
     Note: { note?: Note };
+    PasswordEntry: { note: Note }; 
 };
 export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 export type NoteScreenProps = StackScreenProps<RootStackParamList, 'Note'>;
+export type PasswordEntryScreenNavigationProps = StackNavigationProp<RootStackParamList, 'PasswordEntry'>;
+export type PasswordEntryRouteProp = RouteProp<RootStackParamList, 'PasswordEntry'>;
 export interface EmojiPickerProps {
     isVisible: boolean;
     children: ReactNode;
@@ -29,4 +35,8 @@ export interface TextEditorProps {
     onContentChange: (html: string) => void;
     placeholder: string;
     theme: any;
+}
+export interface PasswordEntryProps  {
+    route: PasswordEntryRouteProp;
+    navigation: PasswordEntryScreenNavigationProps;
 }

@@ -36,24 +36,38 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     setNotes(filteredNotes);
     await AsyncStorage.setItem("notes", JSON.stringify(filteredNotes));
   };
-  const renderRightActions = (note: Note) => {
+  const renderRightActions = (item: Note) => {
     return (
-      <Pressable
-        style={styles.deleteButton}
-        onPress={() =>
-          Alert.alert(
-            "Delete Note",
-            "Are you sure you want to delete this note? ⚠️",
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "Delete", onPress: () => deleteNote(note.title) },
-            ]
-          )
-        }
-      >
-        <MaterialIcons name="delete" size={24} color="white" />
-        <Text style={styles.deleteText}>Delete</Text>
-      </Pressable>
+      <Swipeable renderRightActions={() => renderRightActions(item)}>
+        <Pressable
+          onPress={() => {
+            if (item.locked) {
+              navigation.navigate("PasswordEntry", { note: item });
+            } else {
+              navigation.navigate("Note", { note: item });
+            }
+          }}
+          style={[
+            styles.noteContainer,
+            { backgroundColor: theme.backgroundColor },
+          ]}
+        >
+          <Text style={[styles.emoji, { color: theme.textColor }]}>
+            {item.emoji}
+          </Text>
+          <Text style={[styles.title, { color: theme.textColor }]}>
+            {item.title}
+          </Text>
+          {item.locked && (
+            <MaterialIcons
+              name="lock"
+              size={24}
+              color="grey"
+              style={{ marginLeft: "auto" }}
+            />
+          )}
+        </Pressable>
+      </Swipeable>
     );
   };
   async function loadNotes() {
@@ -98,10 +112,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           const newNote = {
             title: "",
             content: "",
-            noteId: Math.random().toString(36).substr(2, 9), 
-            coverImage: null, 
-            emoji: "📝", 
-            voiceNote: null, 
+            noteId: Math.random().toString(36).substr(2, 9),
+            coverImage: null,
+            emoji: "📝",
+            voiceNote: null,
+            locked: false,
           };
           navigation.navigate("Note", { note: newNote });
         }}
