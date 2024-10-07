@@ -20,6 +20,7 @@ import { darkTheme, lightTheme } from "../utils/theme";
 import * as ImagePicker from "expo-image-picker";
 import EmojiPicker from "../modals/EmojiPicker";
 import TextEditor from "../components/TextEditor";
+import { generateUUID } from "../utils/generateUUID";
 
 export default function NoteScreen({ route, navigation }: NoteScreenProps) {
   const { noteId, note } = route.params;
@@ -92,16 +93,13 @@ const saveNote = async () => {
   try {
     const storedNotes = await AsyncStorage.getItem("notes");
     const notes: Array<Note> = storedNotes ? JSON.parse(storedNotes) : [];
-
-    // Generate a unique key using noteId or UUID fallback
-    const noteKey = note?.id ? `note_${note.id}` : `note_${uuidv4()}`;
+    const noteKey = note?.id ? `note_${note.id}` : generateUUID();
 
     if (note) {
-      // Update existing note
       const updatedNotes = notes.map((n) =>
         n.id === note.id
           ? {
-              ...n, // Keep existing note properties
+              ...n, 
               title,
               content,
               emoji,
@@ -113,9 +111,8 @@ const saveNote = async () => {
       );
       await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
     } else {
-      // Create a new note
       const newNote = {
-        id: noteKey, // Ensure the new note has a valid unique ID
+        id: noteKey, 
         title,
         content,
         emoji,
@@ -125,10 +122,10 @@ const saveNote = async () => {
       };
       await AsyncStorage.setItem("notes", JSON.stringify([...notes, newNote]));
     }
-
     navigation.navigate("Home");
   } catch (error) {
     Alert.alert("Error", "Failed to save note");
+    console.log(error);
   }
 };
   return (
@@ -178,7 +175,10 @@ const saveNote = async () => {
               noteId={noteId}
               placeholder="Write your content here..."
               theme={theme}
-              onContentChange={(newContent) => setContent(newContent)}
+              onContentChange={(newContent) => {
+                console.log(newContent);
+                setContent(newContent);
+              }}
             />
           </View>
           <View style={{ marginBottom: 20 }}>

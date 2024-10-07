@@ -14,7 +14,7 @@ export type Note = {
 };
 export type RootStackParamList = {
     Home: undefined;
-    Note: { note?: Note };
+    Note: { note?: Note, noteId: string };
     PasswordEntry: { note: Note }; 
 };
 export type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;

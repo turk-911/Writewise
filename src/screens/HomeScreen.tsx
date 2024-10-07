@@ -76,7 +76,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                   if (item.locked) {
                     navigation.navigate("PasswordEntry", { note: item });
                   } else {
-                    navigation.navigate("Note", { note: item });
+                    navigation.navigate("Note", { note: item, noteId: item.noteId });
                   }
                 }}
                 style={[
@@ -115,7 +115,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             voiceNote: null,
             locked: false,
           };
-          navigation.navigate("Note", { note: newNote });
+          navigation.navigate("Note", { note: newNote, noteId: newNote.noteId });
         }}
       >
         <Text style={styles.addButtonText}>+</Text>

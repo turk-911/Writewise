@@ -8,6 +8,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
   noteId,
   placeholder,
   theme,
+  onContentChange
 }) => {
   const editorRef = useRef<RichEditor>(null);
   const [content, setContent] = useState<string>("");
@@ -23,9 +24,10 @@ const TextEditor: React.FC<TextEditorProps> = ({
       }
     };
     loadNoteContent();
-  }, [noteId]);
+  }, [noteId, onContentChange]);
   const handleContentChange = async (newContent: string) => {
     setContent(newContent);
+    onContentChange(newContent);
     try {
       await AsyncStorage.setItem(noteId, newContent);
     } catch (error) {
