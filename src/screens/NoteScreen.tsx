@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 import {
   Alert,
   Button,
@@ -18,10 +19,10 @@ import { Appearance } from "react-native";
 import { darkTheme, lightTheme } from "../utils/theme";
 import * as ImagePicker from "expo-image-picker";
 import EmojiPicker from "../modals/EmojiPicker";
-import { Audio } from "expo-av";
 import TextEditor from "../components/TextEditor";
+
 export default function NoteScreen({ route, navigation }: NoteScreenProps) {
-  const { note } = route.params;
+  const { noteId, note } = route.params;
   const [title, setTitle] = useState(note ? note.title : "");
   const [content, setContent] = useState(note ? note.content : "");
   const [emoji, setEmoji] = useState(note ? note.emoji : "😊");
@@ -30,7 +31,6 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
       "https://unsplash.com/photos/3d-geometric-texture-in-copper-jz4D4prCXSM"
   );
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
-  const { noteId } = route.params;
   const [password, setPassword] = useState<string>("");
 
   // Code for selecting cover image
@@ -83,106 +83,54 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
   };
 
   // Code for saving note
-  const saveNote = async () => {
-    if (title.trim() === "" || content.trim() === "") {
-      Alert.alert("Error", "Both title and content are required");
-      return;
-    }
-    try {
-      const storedNotes = await AsyncStorage.getItem("notes");
-      const notes: Array<Note> = storedNotes ? JSON.parse(storedNotes) : [];
+const saveNote = async () => {
+  if (title.trim() === "" || content.trim() === "") {
+    Alert.alert("Error", "Both title and content are required");
+    return;
+  }
 
-      if (note) {
-        const updatedNotes = notes.map((n) =>
-          n.title === note.title
-            ? {
-                title,
-                content,
-                emoji,
-                coverImage,
-                locked: note.locked,
-                password,
-              }
-            : n
-        );
-        await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
-      } else {
-        const newNote = {
-          title,
-          content,
-          emoji,
-          coverImage,
-          locked: false,
-          password,
-        };
-        await AsyncStorage.setItem(
-          "notes",
-          JSON.stringify([...notes, newNote])
-        );
-      }
-      navigation.navigate("Home");
-    } catch (error) {
-      Alert.alert("Error", "Failed to save note");
-    }
-  };
+  try {
+    const storedNotes = await AsyncStorage.getItem("notes");
+    const notes: Array<Note> = storedNotes ? JSON.parse(storedNotes) : [];
 
-  // Code for microphone and voice note features
-  const [voiceNote, setVoiceNote] = useState<string | null>(
-    note ? note?.voiceNote : null
-  );
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
-  const startRecording = async () => {
-    try {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Error", "Microphone permissions are required");
-        return;
-      }
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true });
-      const { recording } = await Audio.Recording.createAsync({
-        android: {
-          extension: ".m4a",
-          outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_DEFAULT,
-          audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC,
-          sampleRate: 44100,
-          numberOfChannels: 2,
-          bitRate: 128000,
-        },
-        ios: {
-          extension: ".m4a",
-          audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_HIGH,
-          sampleRate: 44100,
-          numberOfChannels: 2,
-          bitRate: 128000,
-          linearPCMBitDepth: 16,
-          linearPCMIsBigEndian: false,
-          linearPCMIsFloat: false,
-        },
-        web: {
-          mimeType: "audio/webm",
-          bitsPerSecond: 128000,
-        },
-        isMeteringEnabled: true,
-      });
-      setRecording(recording);
-    } catch (error) {
-      Alert.alert("Error", "Failed to start recording");
+    // Generate a unique key using noteId or UUID fallback
+    const noteKey = note?.id ? `note_${note.id}` : `note_${uuidv4()}`;
+
+    if (note) {
+      // Update existing note
+      const updatedNotes = notes.map((n) =>
+        n.id === note.id
+          ? {
+              ...n, // Keep existing note properties
+              title,
+              content,
+              emoji,
+              coverImage,
+              locked: note.locked,
+              password,
+            }
+          : n
+      );
+      await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
+    } else {
+      // Create a new note
+      const newNote = {
+        id: noteKey, // Ensure the new note has a valid unique ID
+        title,
+        content,
+        emoji,
+        coverImage,
+        locked: false,
+        password,
+      };
+      await AsyncStorage.setItem("notes", JSON.stringify([...notes, newNote]));
     }
-  };
-  const stopRecording = async () => {
-    if (recording) {
-      setRecording(null);
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      setVoiceNote(uri);
-    }
-  };
-  const playVoiceNote = async () => {
-    if (voiceNote) {
-      const { sound } = await Audio.Sound.createAsync({ uri: voiceNote });
-      await sound.playAsync();
-    }
-  };
+
+    navigation.navigate("Home");
+  } catch (error) {
+    Alert.alert("Error", "Failed to save note");
+  }
+};
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -230,23 +178,16 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
               noteId={noteId}
               placeholder="Write your content here..."
               theme={theme}
+              onContentChange={(newContent) => setContent(newContent)}
             />
           </View>
-          <View style={styles.audioControls}>
+          <View style={{ marginBottom: 20 }}>
             <Button
-              title={recording ? "Stop Recording" : "Start Recording"}
-              onPress={recording ? stopRecording : startRecording}
+              title="Save Note"
+              onPress={saveNote}
               color={theme.buttonColor}
             />
-            {voiceNote && (
-              <Button title="Play Voice Note" onPress={playVoiceNote} />
-            )}
           </View>
-          <Button
-            title="Save Note"
-            onPress={saveNote}
-            color={theme.buttonColor}
-          />
           <EmojiPicker
             isVisible={showEmojiPicker}
             onClose={() => setShowEmojiPicker(false)}
@@ -266,6 +207,7 @@ export default function NoteScreen({ route, navigation }: NoteScreenProps) {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -281,7 +223,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     height: 150,
     textAlignVertical: "top",
-    marginBottom: 20,
+    marginBottom: 40, // Added more margin to separate toolbar and button
     padding: 10,
     borderRadius: 5,
   },
@@ -307,9 +249,5 @@ const styles = StyleSheet.create({
   emojiOption: {
     fontSize: 40,
     padding: 10,
-  },
-  audioControls: {
-    marginBottom: 20,
-    alignItems: "center",
   },
 });

@@ -16,60 +16,42 @@ import { darkTheme, lightTheme } from "../utils/theme";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Swipeable } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [notes, setNotes] = useState<Array<Note>>([]);
   const isFocused = useIsFocused();
   const [theme, setTheme] = useState(
     Appearance.getColorScheme() === "dark" ? darkTheme : lightTheme
   );
+
   useEffect(() => {
     if (isFocused) loadNotes();
   }, [isFocused]);
+
   useEffect(() => {
     const listener = Appearance.addChangeListener(({ colorScheme }) => {
       setTheme(colorScheme === "dark" ? darkTheme : lightTheme);
     });
     return () => listener.remove();
   }, []);
-  const deleteNote = async (title: string) => {
-    const filteredNotes = notes.filter((note) => note.title !== title);
+
+  const deleteNote = async (noteId: string) => {
+    const filteredNotes = notes.filter((note) => note.noteId !== noteId);
     setNotes(filteredNotes);
     await AsyncStorage.setItem("notes", JSON.stringify(filteredNotes));
   };
+
   const renderRightActions = (item: Note) => {
     return (
-      <Swipeable renderRightActions={() => renderRightActions(item)}>
-        <Pressable
-          onPress={() => {
-            if (item.locked) {
-              navigation.navigate("PasswordEntry", { note: item });
-            } else {
-              navigation.navigate("Note", { note: item });
-            }
-          }}
-          style={[
-            styles.noteContainer,
-            { backgroundColor: theme.backgroundColor },
-          ]}
-        >
-          <Text style={[styles.emoji, { color: theme.textColor }]}>
-            {item.emoji}
-          </Text>
-          <Text style={[styles.title, { color: theme.textColor }]}>
-            {item.title}
-          </Text>
-          {item.locked && (
-            <MaterialIcons
-              name="lock"
-              size={24}
-              color="grey"
-              style={{ marginLeft: "auto" }}
-            />
-          )}
-        </Pressable>
-      </Swipeable>
+      <Pressable
+        onPress={() => deleteNote(item.noteId)} // Use noteId for deletion
+        style={styles.deleteButton}
+      >
+        <Text style={styles.deleteText}>Delete</Text>
+      </Pressable>
     );
   };
+
   async function loadNotes() {
     try {
       const storedNotes = await AsyncStorage.getItem("notes");
@@ -78,6 +60,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       console.error(error);
     }
   }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
       <View
@@ -85,11 +68,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       >
         <FlatList
           data={notes}
-          keyExtractor={(item) => item.title}
+          keyExtractor={(item) => item.noteId} 
           renderItem={({ item }) => (
             <Swipeable renderRightActions={() => renderRightActions(item)}>
               <Pressable
-                onPress={() => navigation.navigate("Note", { note: item })}
+                onPress={() => {
+                  if (item.locked) {
+                    navigation.navigate("PasswordEntry", { note: item });
+                  } else {
+                    navigation.navigate("Note", { note: item });
+                  }
+                }}
                 style={[
                   styles.noteContainer,
                   { backgroundColor: theme.backgroundColor },
@@ -101,6 +90,14 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 <Text style={[styles.title, { color: theme.textColor }]}>
                   {item.title}
                 </Text>
+                {item.locked && (
+                  <MaterialIcons
+                    name="lock"
+                    size={24}
+                    color="grey"
+                    style={{ marginLeft: "auto" }}
+                  />
+                )}
               </Pressable>
             </Swipeable>
           )}
@@ -112,7 +109,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           const newNote = {
             title: "",
             content: "",
-            noteId: Math.random().toString(36).substr(2, 9),
+            noteId: Math.random().toString(36).substr(2, 9), // Generate unique noteId
             coverImage: null,
             emoji: "📝",
             voiceNote: null,
@@ -126,6 +123,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

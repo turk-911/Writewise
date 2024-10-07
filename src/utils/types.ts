@@ -10,6 +10,7 @@ export type Note = {
     voiceNote?: string | null; 
     locked: boolean;
     password?: string;
+    id?: any;
 };
 export type RootStackParamList = {
     Home: undefined;
